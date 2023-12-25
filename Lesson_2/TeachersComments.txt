@@ -1,0 +1,18 @@
+Well done!
+
+No negative comments, great job!
+
+It would be more convinient if you will add 1 file per homework :)
+That's cool that you are adding answers!
+
+1.c,d
+Not the ideal way to check if something is equal. If we have only 1 case, it would be better to use equals sign: WHERE LastName='Norman'. But your solution, of course, works too.
+
+4.a
+Yes, that's exactly what I was asking for! You're only the second one to understand it :)
+
+4.c
+I didn't mean it to be so difficult :)
+Basic "SELECT MIN(Weight) AS Min_weight, 
+		MAX(Size) AS Max_size
+FROM Production.Product" wiould be enough.
