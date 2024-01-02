@@ -2,3 +2,6 @@ Well done!
 
 2.a
 First when - OR, all others should be AND
+
+2.b
+Where are conditions for the name?
