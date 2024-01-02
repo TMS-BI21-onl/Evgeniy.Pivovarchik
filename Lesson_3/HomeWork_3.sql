@@ -4,8 +4,8 @@
 SELECT StandardCost,
 	CASE 
 		WHEN StandardCost = 0 OR StandardCost IS NULL THEN 'Not for sale'
-		WHEN StandardCost > 0 OR StandardCost < 100 THEN '<$100'
-		WHEN StandardCost >= 100 OR StandardCost < 500 THEN '<$500'
+		WHEN StandardCost > 0 AND StandardCost < 100 THEN '<$100'
+		WHEN StandardCost >= 100 AND StandardCost < 500 THEN '<$500'
 	ELSE '>=500'
 	END as PriceRange
 FROM Production.Product
@@ -16,7 +16,7 @@ SELECT PPV.ProductID, PPV.BusinessEntityID, PV.Name
 FROM Purchasing.Vendor PV
 LEFT JOIN Purchasing.ProductVendor PPV
 ON PV.BusinessEntityID = PPV.BusinessEntityID
-WHERE PPV.StandardPrice > 10
+WHERE PPV.StandardPrice > 10 AND (PV.Name LIKE '%X%' OR PV.Name LIKE 'N%')
 
 --c)
 
