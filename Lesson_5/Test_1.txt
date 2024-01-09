@@ -1,0 +1,59 @@
+Part 1
+
+Task 1
+
+SELECT *
+FROM Водители
+WHERE Стаж NOT IN (3, 5, 6, 10) AND Место прописки = 'еее'
+
+Task 2
+
+SELECT Drivers.№ паспорта
+FROM Водители Drivers
+	LEFT JOIN Диспетчерская Cont_room
+	ON Drivers.Код водителя = Cont_room.Код водителя
+WHERE Cont_room.Код водителя IS NULL 
+
+Task 3
+
+SELECT Регистрационный номер авто, Время прибытия, Время отбытия, Пункт назначения
+FROM Автомобили А
+	JOIN Диспетчерская Д ON А.Код авто = Д.Код авто
+	JOIN Маршур М ON Д.Путевка = М.Код маршрута
+WHERE А.Год выпуска авто = 2015
+
+Part 2
+
+Task 1
+
+SELECT LEFT(FIRST_NAME, 1) AS FN, COUNT(LEFT(FIRST_NAME, 1))
+FROM EMPLOYEES
+GROUP BY LEFT(FIRST_NAME, 1)
+HAVING COUNT(LEFT(FIRST_NAME, 1)) > 2
+
+Task 2
+
+
+
+Task 3
+
+SELECT *
+FROM EMPLOYEES
+WHERE MANAGER_ID IS NULL
+
+TASK 4
+
+SELECT TOP 1 with ties LAST_NAME, LEN(LAST_NAME) AS LEN_LN
+FROM EMPLOYEES
+ORDER BY LEN(LAST_NAME) DESC
+
+TASK 5
+
+SELECT E.FIRST_NAME AS first_name,
+	CASE 
+		WHEN END_DATE IS NULL THEN 'Currently Working'
+		WHEN END_DATE IS NOT NULL THEN CONCAT('Left the company at ', END_DATE)
+	END AS status
+FROM EMPLOYEES E
+	FULL JOIN JOB_HISTORY JH ON E.EMPLOYEE_ID = JH.EMPLOYEE_ID
+
