@@ -1,0 +1,83 @@
+USE AdventureWorks2017;
+--6
+CREATE TABLE Patients
+(
+    Id			INT IDENTITY(1,1),
+    FirstName	NVARCHAR(30),
+    LastName	NVARCHAR(30),
+    SSN			NVARCHAR(10),
+    Email		AS CONCAT(UPPER(LEFT(FirstName, 1)), LOWER(LEFT(LastName, 3)), '@mail.com'),
+	Temp		FLOAT,
+	CreatedDate DATE
+);
+
+--7
+
+INSERT INTO Patients (FirstName, LastName, SSN, Temp, CreatedDate)
+VALUES	(N'Иван', N'Иванов', '1231231231', 37.6, '2024-01-01'), 
+		(N'Петр', N'Петров', '1231431231', 36.6, '2024-01-02'),
+		(N'Мирон', N'Миронов', '1231461231', 38.6, '2024-01-03'),
+		(N'Владимир', N'Владимиров', '1232461231', 36.5, '2024-01-04')
+
+--8
+
+ALTER TABLE Patients
+ADD TempType AS 
+	(
+	CASE	WHEN Temp >= 37 THEN '>= 37°C'
+			WHEN Temp < 37 THEN '< 37°C'
+	END 
+	)
+
+GO
+
+--9
+
+CREATE VIEW Patients_v AS
+	SELECT 
+		 FirstName
+		,LastName
+		,SSN
+		,Temp
+		,CreatedDate
+		,(TEMP * 9 / 5 + 32) AS TempType
+	FROM Patients
+
+GO
+
+--10
+
+CREATE FUNCTION dbo.udfCFN
+(
+    @DegreesCelsius DEC(4,2)
+)
+RETURNS DEC(6,2)
+AS 
+BEGIN
+    RETURN (@DegreesCelsius * 9 / 5 + 32);
+END;
+
+GO
+
+-- 11
+
+DECLARE @DatenameTemp NVARCHAR
+SET @DatenameTemp = DATENAME(WEEKDAY, DATEADD(DD, -DATEPART(DD, GETDATE()) + 1, GETDATE()))
+
+SELECT CASE
+         WHEN @DatenameTemp = 'Saturday' THEN DATEADD(DD, -DATEPART(DD, GETDATE()) + 3, GETDATE())
+         WHEN @DatenameTemp = 'Sunday' THEN DATEADD(DD, -DATEPART(DD, GETDATE()) + 2, GETDATE())
+         ELSE DATEADD(WEEKDAY, -DATEPART(DD, GETDATE()) + 1, GETDATE())
+       END
+
+--12 
+
+SELECT E.FIRST_NAME AS first_name,
+	CASE 
+		WHEN END_DATE IS NULL THEN 'Currently Working'
+		WHEN END_DATE IS NOT NULL THEN CONCAT('Left the company at ', END_DATE)
+	END AS status
+FROM EMPLOYEES E
+	FULL JOIN JOB_HISTORY JH ON E.EMPLOYEE_ID = JH.EMPLOYEE_ID
+
+
