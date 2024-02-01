@@ -1,0 +1,27 @@
+USE AdventureWorks2017
+
+--1
+SELECT PP.FirstName, PP.LastName, PPPhone.PhoneNumber
+FROM Person.Person PP LEFT JOIN Person.PersonPhone PPPhone ON PP.BusinessEntityID=PPPhone.BusinessEntityID
+WHERE LEFT(PPPhone.PhoneNumber, 1) = 4 AND RIGHT(LEFT(PPPhone.PhoneNumber, 3), 1) = 5
+
+--2
+SELECT	BusinessEntityID, DATEDIFF(YEAR, BirthDate, GETDATE()) AS Age, 
+		CASE 
+			WHEN DATEDIFF(YEAR, BirthDate, GETDATE()) >= 17 AND DATEDIFF(YEAR, BirthDate, GETDATE()) <=20 THEN 'Adolescence'
+			WHEN DATEDIFF(YEAR, BirthDate, GETDATE()) >= 21 AND DATEDIFF(YEAR, BirthDate, GETDATE()) <=59 THEN 'Adults'
+			WHEN DATEDIFF(YEAR, BirthDate, GETDATE()) >= 60 AND DATEDIFF(YEAR, BirthDate, GETDATE()) <=75 THEN 'Elderly'
+			WHEN DATEDIFF(YEAR, BirthDate, GETDATE()) >= 76 AND DATEDIFF(YEAR, BirthDate, GETDATE()) <=90 THEN 'Senile'
+		END AS AgeCategory
+FROM HumanResources.Employee
+
+--3
+SELECT *
+FROM (SELECT ProductID, Name, StandardCost, Color, MAX(StandardCost) OVER (ORDER BY Color) AS MaxCost
+		FROM Production.Product) p
+WHERE StandardCost = MaxCost
+
+--Второй вариант не доделал. Вижу, что DENSE_RANK высчитывает максимум внутри каждого цвета, но как вытянуть 1 значение не придумал.
+
+SELECT ProductID, Name, StandardCost, Color, DENSE_RANK () OVER (PARTITION BY Color ORDER BY StandardCost) AS CostRank
+FROM Production.Product
