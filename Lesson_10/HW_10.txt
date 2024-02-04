@@ -1,0 +1,30 @@
+0) Аптека
+
+Требования:
+7 сущностей + придумать 2 задачи
+
+Filials (ID, Name, City, Address, Type)
+Employees (ID, First_name, Middle_name, Last_name, Passport_number, Phone, Position, Salary, Status, Driver_license, Manager_id, Hire_date)
+Drugs (ID, Name, Type, Cost, Need_recipe, Provider, Discribe, Unit)
+Providers (ID, Name, City, Address)
+Orders (ID, Date, Status, Shipment_method,  Ship_date, Due, Order_type)
+Clients (ID, First_name, Middle_name, Last_name, Passport_number, Phone, Status)
+Transport (ID, Brand, Model)
+
+- Получить имена и фамилии всех работников склада (тип = storekeeper), которые не были уволены в период с 01.01.2024 по 31.01.2024
+
+- Вывести лекарства (имя, количество, поставщик), которые были проданы в декабре через интернет (Order_type = 'Internet')
+
+3)
+
+SELECT YEAR, [1] AS 'January', [2] AS 'February', [12] AS 'December'
+FROM  
+(
+  SELECT OrderQty, YEAR(DueDate) AS YEAR, MONTH(DueDate) AS MONTH
+  FROM Production.WorkOrder
+) AS SourceTable  
+PIVOT  
+(  
+  SUM(OrderQty)  
+  FOR MONTH IN ([1], [2], [12])  
+) AS PivotTable;  

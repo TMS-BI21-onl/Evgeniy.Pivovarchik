@@ -1,0 +1,7 @@
+1. In progress
+   
+2. 
+
+SELECT S.FirstName, S.LastName, F.FirstName, F.LastName
+FROM People S JOIN People F ON S.ID = F.ID_Father
+WHERE S.FirstName = 'Дмитрий'
