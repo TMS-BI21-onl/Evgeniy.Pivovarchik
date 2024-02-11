@@ -51,5 +51,8 @@ SalaryPerHour - рандом от 20 до 100
 PersonalTrainCost - рандом от 20 до 100
 OrganizationRate - random float от 5 до 50
 */
+SELECT *, LEFT(P
+FROM AdventureWorks2017.dbo.MOCK_Employee
+'Manager', 'Trainer', 'Cleaner', 'Accounter', 'Economist', 'Administrator', 'Trainer', 'SMM-Manager', 'Trainer'
 
 Загрузить данные в работников.

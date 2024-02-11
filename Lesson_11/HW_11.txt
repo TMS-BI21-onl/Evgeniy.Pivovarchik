@@ -1,0 +1,169 @@
+Task 2. Задача 20
+
+1. Оказание услуг (ID, ID_пациента, ID_врача, ID_услуги, ID_кабинета, ID_Диагноз, Дата, Продолжительность_приема, Стоимость)
+2. Пациенты (ID, Фамилия, Имя, Отчество, Дата_Рождения, Тип_Пациента, Паспорт, Телефон, Адрес)
+3. Врачи (ID, Имя, Фамилия, Отчество, Специализация, Дата_Рождения, Телефон, Категория, Дата_Найма, Дней_Отпуск, Дней_Больничный)
+4. Услуги (ID, Наименование, Вид, Тип, Цена)
+5. Кабинеты (ID, №Кабинета, Корпус, Адрес, Этаж)
+6. Диагнозы (ID, Наименование, Тип, Класс)
+
+
+1. Найти самый загруженный и самый менее загруженный день приема пациентов по каждой Специализации врачей за последний месяц. (колонки вывода - специализация, самый популярный день, самый непопулярный)
+
+
+SELECT Max_date.Специализация, Max_date.Дата, Min_date.Дата
+FROM (
+SELECT *
+FROM (
+SELECT Специализация, Дата, Count_Услуги, MAX(Count_Услуги) OVER (Partition BY Специализация) AS MAX_Sales, MIN(Count_Услуги) OVER (Partition BY Специализация) AS MIN_Sales, DENSE_RANK() OVER(PARTITION BY Специализация ORDER BY Count_Услуги ASC) AS Max_Услуги, DENSE_RANK() OVER(PARTITION BY Специализация ORDER BY Count_Услуги DESC) AS Min_Услуги
+FROM (SELECT S.Специализация AS Специализация, S.Дата AS Дата, COUNT (S.Дата) OVER (PARTITION BY S.Дата) AS Count_Услуги
+FROM Оказание услуг S JOIN Врачи C ON S.ID_врача = C.ID_врача
+WHERE S.Дата BETWEEN CONVERT(DATETIME, '2024-01-01 00:00:00') AND CONVERT(DATETIME, '2024-01-31 00:00:00')) SC ) SC_1
+WHERE Max_Услуги = 1) Max_date
+JOIN 
+(SELECT *
+FROM (
+SELECT Специализация, Дата, Count_Услуги, MAX(Count_Услуги) OVER (Partition BY Специализация) AS MAX_Sales, MIN(Count_Услуги) OVER (Partition BY Специализация) AS MIN_Sales, DENSE_RANK() OVER(PARTITION BY Специализация ORDER BY Count_Услуги ASC) AS Max_Услуги, DENSE_RANK() OVER(PARTITION BY Специализация ORDER BY Count_Услуги DESC) AS Min_Услуги
+FROM (SELECT S.Специализация AS Специализация, S.Дата AS Дата, COUNT (S.Дата) OVER (PARTITION BY S.Дата) AS Count_Услуги
+FROM Оказание услуг S JOIN Врачи C ON S.ID_врача = C.ID_врача
+WHERE S.Дата BETWEEN CONVERT(DATETIME, '2024-01-01 00:00:00') AND CONVERT(DATETIME, '2024-01-31 00:00:00')) SC ) SC_1
+WHERE Min_Услуги = 1) Min_date
+ON Max_date.Специализация = Min_date.Специализация
+
+
+2. Найти «круглых» юбиляров-врачей в этом году (10,20,30, и т.п) по возрасту. Вывести по ним: продолжительность работы(лет), наиболее часто выставляемый диагноз и среднюю продолжительность приема.
+
+SELECT Фамилия, Имя, Стаж, Наименование_диагноза, Средняя_продолжительность
+FROM
+(
+SELECT *, DENSE_RANK() OVER(PARTITION BY Частота_диагноза ORDER BY ID_Врача DESC) AS Rate_частоты
+FROM 
+(
+SELECT *, COUNT(ID_Диагноз) OVER (PARTITION BY ID_Врача) AS Частота_диагноза, AVG(Продолжительность_приема) OVER (PARTITION BY ID_врача) AS Средняя_продолжительность
+FROM 
+(
+SELECT *, DATEDIFF(YYYY, Дата_рождения, GETDATE()) AS Возраст, DATEDIFF(YYYY, Дата_Найма, GETDATE()) AS Стаж
+FROM Врачи
+WHERE (DATEDIFF(YYYY, Дата_рождения, GETDATE()) % 10) = 0
+) В
+JOIN Оказание услуг О
+ON В.ID_Врача = О.ID_Врача
+JOIN Диагнозы Д ON Д.ID_диагноз = О.ID_диагноз
+)
+)
+WHERE Rate_частоты = 1
+
+
+Task 3.
+CREATE TABLE AdventureWorks2017.dbo.output_merge
+	(Function_name NVARCHAR(50),
+	Function_count INT)
+;
+
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT Alex AS Function_name, COUNT(Alex) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE Alex IS NOT NULL
+GROUP BY Alex) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
+GO
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT CARLOS AS Function_name, COUNT(CARLOS) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE CARLOS IS NOT NULL
+GROUP BY CARLOS) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
+GO
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT Charles AS Function_name, COUNT(Charles) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE Charles IS NOT NULL
+GROUP BY Charles) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
+GO
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT Daniel AS Function_name, COUNT(Daniel) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE Daniel IS NOT NULL
+GROUP BY Daniel) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
+GO
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT Esteban AS Function_name, COUNT(Esteban) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE Esteban IS NOT NULL
+GROUP BY Esteban) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
+GO
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT Fred AS Function_name, COUNT(Fred) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE Fred IS NOT NULL
+GROUP BY Fred) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
+GO
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT George AS Function_name, COUNT(George) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE George IS NOT NULL
+GROUP BY George) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
+GO
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT Lando AS Function_name, COUNT(Lando) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE Lando IS NOT NULL
+GROUP BY Lando) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
+GO
+MERGE AdventureWorks2017.dbo.output_merge AS target
+USING (SELECT Lewis AS Function_name, COUNT(Lewis) AS Function_count
+FROM AdventureWorks2017.dbo.data_for_merge
+WHERE Lewis IS NOT NULL
+GROUP BY Lewis) AS source ON (target.Function_Name=source.Function_name)
+
+WHEN MATCHED 
+	THEN UPDATE SET target.Function_count = source.Function_count + target.Function_count
+WHEN NOT MATCHED BY TARGET 
+	THEN INSERT (Function_name, Function_count)
+	VALUES (source.Function_name, source.Function_count);
