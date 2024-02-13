@@ -22,7 +22,7 @@ SELECT MAX(price) FROM product
 SELECT name
 FROM
 (SELECT name, MAX(price) OVER () AS max_price
-FROM product)
+FROM product) mp
 WHERE price = max_price
 
 3.3
@@ -35,14 +35,14 @@ FROM
 (
 SELECT *, RANK() OVER(ORDER BY price DESC) price_rank
 FROM product
-)
+) mp
 WHERE price = (
 SELECT MAX(price_rank)
 FROM
 (
 SELECT *, RANK() OVER(ORDER BY price DESC) price_rank
 FROM product
-)
+) mp
 
 4.
 
@@ -53,7 +53,16 @@ WHERE p.phone LIKE (+3%4) OR U.age > 35
 
 5. 
 
-SELECT U.name, TOP 5 COUNT(O.product_id)
+5.1 
+SELECT TOP 5 U.name, COUNT(O.product_id)
 FROM user U
 LEFT JOIN order O ON u.ID = O.user_id
 GROUP BY U.name
+
+5.2
+
+SELECT TOP 5 WITH TIES U.name
+(SELECT U.name, COUNT(O.product_id) OVER(PARTITION BY U.id) AS sales
+FROM user U
+LEFT JOIN order O ON u.ID = O.user_id) s
+ORDER BY sales DESC
