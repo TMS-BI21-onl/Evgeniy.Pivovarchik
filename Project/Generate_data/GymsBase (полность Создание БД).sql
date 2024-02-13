@@ -1,10 +1,12 @@
-CREATE DATABASE GymsBase
+Drop DATABASE GymsBase
+-----------------------------------------------------------------------------------------------------------------------------------
 
+CREATE DATABASE GymsBase
 GO
 USE GymsBase
 CREATE TABLE dbo.ClientsSubs (
 	ClientsSubID INT PRIMARY KEY IDENTITY (1,1),
-	PassportNumber NVARCHAR(14) NOT NULL UNIQUE (PassportNumber),
+	PassportNumber NVARCHAR(14) NOT NULL,
 	RegistrationDate DATE NOT NULL,
 	FirstName NVARCHAR(30) NOT NULL,
 	LastName NVARCHAR(30) NOT NULL,
@@ -44,7 +46,7 @@ GO
 CREATE TABLE dbo.VisitEmployees (
 	VisitEmployeeID INT PRIMARY KEY IDENTITY(1,1),
 	EmployeeID INT FOREIGN KEY (EmployeeID) REFERENCES Employees (EmployeeID),
-	DateStart DATETIME,
+	DateStart DATETIME NOT NULL,
 	DateEnd DATETIME,
 	FilialsID INT FOREIGN KEY (FilialsID) REFERENCES Filials (FilialsID)
  )
@@ -140,6 +142,9 @@ INSERT INTO [GymsBase].[dbo].[Employees] ([FirstName], [LastName], [PassportNumb
 SELECT *
 FROM T_Employees
 
+SELECT *
+FROM [GymsBase].[dbo].[Employees]
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 dbo.Filials
 ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -151,14 +156,8 @@ AddressC AS
  UNION SELECT 'PB GRODNO' AS c
  UNION SELECT 'PB MOGILEV' AS d
  UNION SELECT 'PB VITEBSK' AS e
- UNION SELECT 'AVSTRIA VENA' AS f
- UNION SELECT 'GERMANIA BERLIN' AS g
- UNION SELECT 'ITALIA RIM' AS h
- UNION SELECT 'IRLANDIA DUBLIN' AS t
- UNION SELECT 'ISPANIA MADRID' AS o
- UNION SELECT 'NORVEGIA OSLO' AS p
- UNION SELECT 'CERBIA BELGRAD' AS s
- UNION SELECT 'ESTONIA TALLIN' AS j),
+ UNION SELECT 'PB GOMEL' AS f
+),
 AddressS AS
 (SELECT 'A' AS a 
  UNION SELECT 'B' AS b
@@ -194,14 +193,7 @@ T_Filials AS
 						WHEN 'PB GRODNO' THEN 'FILIAL 3 PB GRODNO'
 						WHEN 'PB MOGILEV' THEN 'FILIAL 4 PB MOGILEV'
 						WHEN 'PB VITEBSK' THEN 'FILIAL 5 PB VITEBSK'
-						WHEN 'AVSTRIA VENA' THEN 'FILIAL 6 AVSTRIA VENA'
-						WHEN 'GERMANIA BERLIN' THEN 'FILIAL 7 GERMANIA BERLIN'
-						WHEN 'ITALIA RIM' THEN 'FILIAL 8 ITALIA RIM'
-						WHEN 'IRLANDIA DUBLIN' THEN 'FILIAL 9 IRLANDIA DUBLIN'
-						WHEN 'ISPANIA MADRID' THEN 'FILIAL 10 ISPANIA MADRID'
-						WHEN 'NORVEGIA OSLO' THEN 'FILIAL 11 NORVEGIA OSLO'
-						WHEN 'CERBIA BELGRAD' THEN 'FILIAL 12 CERBIA BELGRAD'
-						WHEN 'ESTONIA TALLIN' THEN 'FILIAL 13 ESTONIA TALLIN'
+						WHEN 'PB GOMEL' THEN 'FILIAL 6 PB GOMEL'
 						ELSE 'N/A' END AS [Name]
 	    ,CONCAT(AddressC.a,',Street',AddressS.a,',House',AddressH.a,'',ABS(CHECKSUM(NEWID())) % 143) AS [Address]
  FROM AddressC
@@ -212,6 +204,9 @@ T_Filials AS
 INSERT INTO [GymsBase].[dbo].[Filials] ([Name], [Address])
 SELECT *
 FROM T_Filials
+
+SELECT *
+FROM [GymsBase].[dbo].[Filials]
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 dbo.ClientsSubs
@@ -225,7 +220,7 @@ LN AS
 (SELECT DISTINCT pp.LastName
  FROM Person.Person pp),
 SUB AS
-(SELECT TOP (1000) 
+(SELECT TOP (5000) 
         CONCAT(LEFT(FirstName,1), LEFT(LastName,1), SUBSTRING( CAST(ABS(CHECKSUM(NEWID())) AS varchar(50)) , 1 , 6)) AS PassportNumber
 	   ,CAST(DATEADD(minute , -ABS(CHECKSUM(NEWID()))/1000 , GETDATE()) AS Date) AS RegistrationDate
 	   ,FN.FirstName
@@ -243,15 +238,15 @@ SUB AS
 			 WHEN 7 THEN 'VIP'
 			 ELSE 'Classic' END AS SubscriptionName
       ,CASE ABS(CHECKSUM(NEWID())) % 8
-			 WHEN 0 THEN 1
-			 WHEN 1 THEN 3
-			 WHEN 2 THEN 6
-			 WHEN 3 THEN 12
-			 WHEN 4 THEN 12
-			 WHEN 5 THEN 24
-			 WHEN 6 THEN 24
+			 WHEN 0 THEN 12
+			 WHEN 1 THEN 24
+			 WHEN 2 THEN 12
+			 WHEN 3 THEN 24
+			 WHEN 4 THEN 36
+			 WHEN 5 THEN 36
+			 WHEN 6 THEN 36
 			 WHEN 7 THEN 36
-			 ELSE 12 END AS Duration
+			 ELSE 36 END AS Duration
  FROM FN
  CROSS JOIN LN
  ORDER BY NEWID()),
@@ -268,33 +263,18 @@ SUB AS
 			 WHEN 6 THEN DATEADD(DAY,10,RegistrationDate)
 			 WHEN 7 THEN DATEADD(DAY,15,RegistrationDate)
 			 ELSE DATEADD(DAY,0,RegistrationDate) END AS SubscriptionDateStartOLD
-       ,CASE WHEN SubscriptionName = 'Classic' AND Duration = '1' THEN 6*1 *10
-	         WHEN SubscriptionName = 'Classic' AND Duration = '3' THEN 6*3 *10
-			 WHEN SubscriptionName = 'Classic' AND Duration = '6' THEN 6*6 *9
-			 WHEN SubscriptionName = 'Classic' AND Duration = '12' THEN 6*12 *9
+       ,CASE WHEN SubscriptionName = 'Classic' AND Duration = '12' THEN 6*12 *9
 			 WHEN SubscriptionName = 'Classic' AND Duration = '24' THEN 6*24 *8
 			 WHEN SubscriptionName = 'Classic' AND Duration = '36' THEN 6*36 *8
-	         WHEN SubscriptionName = 'Gold' AND Duration = '1' THEN 8*1 *10
-			 WHEN SubscriptionName = 'Gold' AND Duration = '3' THEN 8*3 *10
-			 WHEN SubscriptionName = 'Gold' AND Duration = '6' THEN 8*6 *9 
-			 WHEN SubscriptionName = 'Gold' AND Duration = '12' THEN 8*12 *9 
+	         WHEN SubscriptionName = 'Gold' AND Duration = '12' THEN 8*12 *9 
 			 WHEN SubscriptionName = 'Gold' AND Duration = '24' THEN 8*24 *8 
 			 WHEN SubscriptionName = 'Gold' AND Duration = '36' THEN 8*36 *8 
-			 WHEN SubscriptionName = 'Platinum' AND Duration = '1' THEN 10*1 *10
-			 WHEN SubscriptionName = 'Platinum' AND Duration = '3' THEN 10*3 *10
-			 WHEN SubscriptionName = 'Platinum' AND Duration = '6' THEN 10*6 *9
 			 WHEN SubscriptionName = 'Platinum' AND Duration = '12' THEN 10*12 *9
 			 WHEN SubscriptionName = 'Platinum' AND Duration = '24' THEN 10*24 *8
 			 WHEN SubscriptionName = 'Platinum' AND Duration = '36' THEN 10*36 *8
-			 WHEN SubscriptionName = 'Black' AND Duration = '1' THEN 12*1 *10 
-			 WHEN SubscriptionName = 'Black' AND Duration = '3' THEN 12*3 *10 
-			 WHEN SubscriptionName = 'Black' AND Duration = '6' THEN 12*6 *9 
 			 WHEN SubscriptionName = 'Black' AND Duration = '12' THEN 12*12 *9 
 			 WHEN SubscriptionName = 'Black' AND Duration = '24' THEN 12*24 *8 
 			 WHEN SubscriptionName = 'Black' AND Duration = '36' THEN 12*36 *8 
-			 WHEN SubscriptionName = 'VIP' AND Duration = '1' THEN 15*1 *10 
-			 WHEN SubscriptionName = 'VIP' AND Duration = '3' THEN 15*3 *10 
-			 WHEN SubscriptionName = 'VIP' AND Duration = '6' THEN 15*6 *9 
 			 WHEN SubscriptionName = 'VIP' AND Duration = '12' THEN 15*12 *9 
 			 WHEN SubscriptionName = 'VIP' AND Duration = '24' THEN 15*24 *8 
 			 WHEN SubscriptionName = 'VIP' AND Duration = '36' THEN 15*36 *8 
@@ -331,7 +311,44 @@ SELECT *
 FROM T_ClientsSubs
 ORDER BY RegistrationDate
 
+SELECT *
+FROM [GymsBase].[dbo].[ClientsSubs]
 
+---------------------------------------------------------------------------------------------------------------------------------------------------
+--!!!!!!!!!!!!!! ¬вести свои данные
+INSERT INTO [dbo].[ClientsSubs] ([PassportNumber], [RegistrationDate], [FirstName], [LastName], [PhoneNumber], [Email], [SubscriptionDateStart],
+            [SubsciptrionDateEnd], [SubsciptionDatePurchase], [SubscriptionName], [Duration], [Cost], [StatusSubscription])
+VALUES ('JM180595',	'2020-01-13', 'Joseph', 'Martinez', '80210858676', 'JOmar@mail.com', '2021-01-17', '2022-01-17', '2021-01-16', 'Platinum', '12', '1080,00', 'Finished'),
+       ('JM180595',	'2020-01-13', 'Joseph', 'Martinez', '80210858676', 'JOmar@mail.com', '2022-01-18', '2023-01-18', '2022-01-18', 'Platinum', '12', '1080,00', 'Finished'),
+	   ('JM180595',	'2020-01-13', 'Joseph', 'Martinez', '80210858676', 'JOmar@mail.com', '2023-01-19', '2025-01-19', '2023-01-18', 'Platinum', '24', '1920,00', 'Active'),
+
+       ('GN185887',	'2020-11-11', 'Grant', 'Netz', '80211512688', 'GRnet@mail.com',	'2022-11-12', '2023-11-12', '2022-11-11', 'Gold', '12', '864,00', 'Finished'),
+       ('GN185887',	'2020-11-11', 'Grant', 'Netz', '80211512688', 'GRnet@mail.com',	'2023-11-13', '2024-11-13', '2023-11-13', 'Gold', '12', '864,00', 'Active'),
+
+	   ('DF178103',	'2021-08-29', 'Dominique', 'Finley', '80218633786', 'DOfin@mail.com', '2022-08-30', '2023-08-30', '2022-08-30', 'Gold', '12', '864,00', 'Finished'),
+	   ('DF178103',	'2021-08-29', 'Dominique', 'Finley', '80218633786', 'DOfin@mail.com', '2023-08-31', '2024-08-31', '2023-08-30', 'Platinum', '12', '1080,00', 'Active'),
+
+	   ('SA756998',	'2020-01-27', 'Samuel', 'Ahlering', '80218257726', 'SAahl@mail.com', '2021-02-04', '2022-02-04', '2021-02-03', 'Classic', '12', '648,00', 'Finished'),
+	   ('SA756998',	'2020-01-27', 'Samuel', 'Ahlering', '80218257726', 'SAahl@mail.com', '2022-02-05', '2023-02-05', '2022-02-05', 'Gold', '12', '864,00', 'Finished'),
+	   ('SA756998',	'2020-01-27', 'Samuel', 'Ahlering', '80218257726', 'SAahl@mail.com', '2023-02-06', '2024-02-06', '2023-02-05', 'Platinum', '12', '1080,00', 'Finished'),
+	   ('SA756998',	'2020-01-27', 'Samuel', 'Ahlering', '80218257726', 'SAahl@mail.com', '2024-02-07', '2025-02-07', '2024-02-07', 'Black', '12', '1296,00', 'Active'),
+
+	   ('CS211679',	'2020-02-05', 'Cecil', 'Schare', '80213382602', 'CEsch@mail.com', '2023-02-14', '2026-02-14', '2023-02-14', 'Classic', '36', '1728,00', 'Active'),
+
+	   ('AY971332',	'2020-02-05', 'Armando', 'Ye', '80219103957', 'ARye@mail.com', '2021-02-09', '2022-02-09', '2021-02-09', 'Classic', '12', '648,00', 'Finished'),
+	   ('AY971332',	'2020-02-05', 'Armando', 'Ye', '80219103957', 'ARye@mail.com', '2022-02-10', '2023-02-10', '2022-02-10', 'Classic', '12', '648,00', 'Finished'),
+	   ('AY971332',	'2020-02-05', 'Armando', 'Ye', '80219103957', 'ARye@mail.com', '2024-02-11', '2025-02-11', '2024-02-11', 'Classic', '12', '648,00', 'Active'),
+
+	   ('RW654101',	'2020-01-14', 'Robert', 'Weimer', '80212960984', 'ROwei@mail.com',	'2021-01-22', '2022-01-22', '2021-01-22', 'Classic', '12', '648,00', 'Finished'),
+	   ('RW654101',	'2020-01-14', 'Robert', 'Weimer', '80212960984', 'ROwei@mail.com',	'2022-01-23', '2023-01-23', '2022-01-23', 'Gold', '12', '864,00', 'Finished'),
+	   ('RW654101',	'2020-01-14', 'Robert', 'Weimer', '80212960984', 'ROwei@mail.com',	'2023-01-24', '2024-01-24', '2023-01-24', 'Classic', '12', '648,00', 'Finished'),
+	   ('RW654101',	'2020-01-14', 'Robert', 'Weimer', '80212960984', 'ROwei@mail.com',	'2024-01-25', '2025-01-25', '2024-01-25', 'Classic', '12', '648,00', 'Active'),
+
+	   ('DK159206',	'2022-11-08', 'Don', 'Kharatishvili', '80255681080', 'DOkha@mail.com',	'2023-11-09', '2024-11-09', '2023-11-08', 'VIP', '36', '4320,00', 'Active')
+
+SELECT *
+FROM [GymsBase].[dbo].[ClientsSubs]
+WHERE PassportNumber IN ('JM180595', 'GN185887', 'DF178103', 'SA756998', 'CS211679', 'AY971332', 'RW654101', 'DK159206')
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 dbo.VisitEmployees
 ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -345,7 +362,7 @@ T_Filials AS
  FROM [GymsBase].[dbo].[Filials]),
 VisitEmployees AS (
 SELECT TOP 1000000  EmployeeID
-                ,CASE WHEN CAST(DATEADD(minute , -ABS(CHECKSUM(NEWID()))/1000 , GETDATE()) AS Date) < (SELECT min(RegistrationDate) AS MIN_DATE FROM [GymsBase].[dbo].[ClientsSubs]) THEN (SELECT min(RegistrationDate) AS MIN_DATE FROM [GymsBase].[dbo].[ClientsSubs])
+                ,CASE WHEN CAST(DATEADD(minute , -ABS(CHECKSUM(NEWID()))/1000 , GETDATE()) AS Date) < (SELECT min(RegistrationDate) AS MIN_DATE FROM [GymsBase].[dbo].[ClientsSubs] WHERE RegistrationDate IS NOT NULL) THEN (SELECT min(RegistrationDate) AS MIN_DATE FROM [GymsBase].[dbo].[ClientsSubs] WHERE RegistrationDate IS NOT NULL)
 				      WHEN CAST(DATEADD(minute , -ABS(CHECKSUM(NEWID()))/1000 , GETDATE()) AS Date) > GETDATE() THEN GETDATE()
 				 ELSE CAST(DATEADD(minute , -ABS(CHECKSUM(NEWID()))/1000 , GETDATE()) AS Date) END AS DateStartOLD
 				,FilialsID
@@ -353,6 +370,12 @@ FROM T_Employees
 CROSS JOIN T_Filials
 ORDER BY newid()),
 VisitEmployees2 AS 
+(SELECT EmployeeID
+       ,CASE WHEN DateStartOLD IS NOT NULL THEN DateStartOLD
+	         ELSE (SELECT min(RegistrationDate) AS MIN_DATE FROM [GymsBase].[dbo].[ClientsSubs] WHERE RegistrationDate IS NOT NULL) END AS DateStartOLD
+	   ,FilialsID                         
+FROM VisitEmployees),
+VisitEmployees3 AS
 (SELECT EmployeeID
 	   ,CASE ABS(CHECKSUM(NEWID())) % 8
 					  WHEN 0 THEN DATEADD(hour,2,DateStartOLD)
@@ -365,24 +388,24 @@ VisitEmployees2 AS
 					  WHEN 7 THEN DATEADD(hour,9,DateStartOLD)
 					  WHEN 8 THEN DATEADD(hour,10,DateStartOLD)
 					  ELSE DATEADD(hour,6,DateStartOLD) END AS DateStart
-	   ,FilialsID                         
-FROM VisitEmployees),
+	   ,FilialsID
+FROM VisitEmployees2),
 T_VisitEmployees AS
 (SELECT EmployeeID
-       ,DateStart
-	   ,CASE ABS(CHECKSUM(NEWID())) % 8
-					  WHEN 0 THEN DATEADD(hour,2,DateStart)
-					  WHEN 1 THEN DATEADD(hour,3,DateStart)
-					  WHEN 2 THEN DATEADD(hour,4,DateStart)
-					  WHEN 3 THEN DATEADD(hour,5,DateStart)
-					  WHEN 4 THEN DATEADD(hour,6,DateStart)
-					  WHEN 5 THEN DATEADD(hour,7,DateStart)
-					  WHEN 6 THEN DATEADD(hour,8,DateStart)
-					  WHEN 7 THEN DATEADD(hour,9,DateStart)
-					  WHEN 8 THEN DATEADD(hour,10,DateStart)
-					  ELSE DATEADD(hour,6,DateStart) END AS DateEnd
+      ,DateStart
+	  ,CASE ABS(CHECKSUM(NEWID())) % 8
+			WHEN 0 THEN DATEADD(hour,2,DateStart)
+			WHEN 1 THEN DATEADD(hour,3,DateStart)
+			WHEN 2 THEN DATEADD(hour,4,DateStart)
+		    WHEN 3 THEN DATEADD(hour,5,DateStart)
+		    WHEN 4 THEN DATEADD(hour,6,DateStart)
+			WHEN 5 THEN DATEADD(hour,7,DateStart)
+			WHEN 6 THEN DATEADD(hour,8,DateStart)
+			WHEN 7 THEN DATEADD(hour,9,DateStart)
+			WHEN 8 THEN DATEADD(hour,10,DateStart)
+			ELSE DATEADD(hour,6,DateStart) END AS DateEnd
 	   ,FilialsID
-FROM VisitEmployees2)
+FROM VisitEmployees3)
 INSERT INTO [GymsBase].[dbo].[VisitEmployees] ([EmployeeID], [DateStart], [DateEnd], [FilialsID])
 SELECT *
 FROM T_VisitEmployees
@@ -391,73 +414,70 @@ FROM T_VisitEmployees
 dbo.VisitClients
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
-WITH 
+WITH
 T_ClientsSubs AS
-(SELECT ClientsSubID
- FROM [GymsBase].[dbo].[ClientsSubs]
- UNION
- SELECT ClientsSubID
- FROM [GymsBase].[dbo].[ClientsSubs]
- UNION
- SELECT ClientsSubID
+(SELECT DISTINCT ClientsSubID, SubscriptionDateStart, SubsciptrionDateEnd, CAST(ABS(CHECKSUM(NEWID())) AS INT) % 999 AS a
  FROM [GymsBase].[dbo].[ClientsSubs]),
-T_ClientsSubs2 AS
-(SELECT ClientsSubID, SubscriptionDateStart, SubsciptrionDateEnd
- FROM [GymsBase].[dbo].[ClientsSubs]
- WHERE SubscriptionDateStart IS NOT NULL),
-T_Filials AS
-(SELECT TOP 30 FilialsID
- FROM [GymsBase].[dbo].[Filials]
- ORDER BY newid()),
-EMP AS
-(SELECT TOP 10000000 [VisitEmployeeID], CAST([DateStart] AS Date) AS DateStart
- FROM [GymsBase].[dbo].[VisitEmployees]
- ORDER BY NEWID()),
-VisitClients AS 
-(SELECT TOP 10000000 ClientsSubID
-       ,FilialsID
-       ,ROW_NUMBER() OVER (PARTITION BY ClientsSubID ORDER BY ClientsSubID DESC) AS s
- FROM T_ClientsSubs c
- CROSS JOIN T_Filials
- ORDER BY NEWID()),
- VisitClients2 AS 
-(SELECT v.ClientsSubID
-       ,v.FilialsID
-	   ,c.SubscriptionDateStart
-	   ,c.SubsciptrionDateEnd
-	   ,MIN(v.FilialsID) OVER (PARTITION BY v.ClientsSubID ORDER BY v.FilialsID) AS r
-       ,v.s
- FROM VisitClients v
- JOIN T_ClientsSubs2 c ON c.ClientsSubID = v.ClientsSubID
- ),
+T_VisitEmployees AS
+(SELECT DISTINCT CAST([DateStart] AS Date) AS DateStart
+ FROM [GymsBase].[dbo].[VisitEmployees]),
+ClientDate AS
+(SELECT ClientsSubID
+       ,DateStart
+	   ,SubscriptionDateStart
+	   ,SubsciptrionDateEnd
+	   ,a
+	   ,CASE WHEN DateStart BETWEEN DATEADD(day,1,SubscriptionDateStart) AND SubsciptrionDateEnd THEN 1
+	    ELSE 0 END AS FLAG
+ FROM T_ClientsSubs
+ CROSS JOIN T_VisitEmployees),
+VisitClients AS
+(SELECT TOP 994080 ClientsSubID
+                 ,DateStart AS VisitDate
+				 ,CASE WHEN a = 0 THEN CAST(1000 AS INT)
+				  ELSE a END AS FilialsID
+FROM ClientDate
+WHERE FLAG = 1
+ORDER BY newid()),
 T_VisitClients AS
 (SELECT ClientsSubID
-       ,SubscriptionDateStart
-       ,CASE WHEN r = s THEN  SubscriptionDateStart
-	         WHEN r != s AND SubsciptrionDateEnd > DATEADD(day,ABS(CHECKSUM(NEWID())) % 17*3+1,SubscriptionDateStart) THEN DATEADD(day,ABS(CHECKSUM(NEWID())) % 17*3+1,SubscriptionDateStart)
-			 ELSE SubsciptrionDateEnd
-		END AS VisitDate
-	   ,FilialsID
-	   ,e.VisitEmployeeID
- FROM VisitClients2 v
- LEFT JOIN EMP e ON e.DateStart = v.SubscriptionDateStart
- ),
- T_LastVersion AS
- (
- SELECT TOP 1000000 ClientsSubID
        ,VisitDate
-	   ,FilialsID
-	   ,CASE WHEN VisitDate = SubscriptionDateStart THEN VisitEmployeeID
-	    END AS VisitEmployeeID
- FROM T_VisitClients
- ORDER BY NEWID()
- )
-
- SELECT ClientsSubID
-       ,VisitDate
-	   ,FilialsID
+	   ,vc.FilialsID
 	   ,VisitEmployeeID
- FROM T_LastVersion
- ORDER BY ClientsSubID, VisitDate
+FROM VisitClients vc
+LEFT JOIN (SELECT DISTINCT CAST([DateStart] AS Date) AS DateStart, FilialsID, MAX(VisitEmployeeID) AS VisitEmployeeID
+ FROM [GymsBase].[dbo].[VisitEmployees]
+ GROUP BY CAST([DateStart] AS Date),FilialsID
+-- ORDER BY CAST([DateStart] AS Date
+ ) ve ON vc.FilialsID = ve.FilialsID AND vc.VisitDate = ve.DateStart)
+INSERT INTO [GymsBase].[dbo].[VisitClients] ([ClientsSubID], [VisitDate], [FilialsID], [VisitEmployeeID])
+SELECT *
+FROM T_VisitClients
+ORDER BY VisitDate
 
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+WITH
+Visit AS
+(SELECT DISTINCT ClientsSubID
+       ,SubscriptionDateStart
+	   ,CAST(ABS(CHECKSUM(NEWID())) AS INT) % 999 AS a
+ FROM [GymsBase].[dbo].[ClientsSubs]),
+Visit2 AS
+(SELECT ClientsSubID
+      ,SubscriptionDateStart
+	  ,CASE WHEN a = 0 THEN CAST(1000 AS INT)
+		    ELSE a END AS FilialsID
+FROM Visit),
+T_VisitClients AS
+(SELECT ClientsSubID, SubscriptionDateStart AS VisitDate, v.FilialsID, VisitEmployeeID
+FROM Visit2 v
+LEFT JOIN (SELECT DISTINCT CAST([DateStart] AS Date) AS DateStart, FilialsID, MAX(VisitEmployeeID) AS VisitEmployeeID
+ FROM [GymsBase].[dbo].[VisitEmployees]
+ GROUP BY CAST([DateStart] AS Date),FilialsID
+-- ORDER BY CAST([DateStart] AS Date
+ ) ve ON v.FilialsID = ve.FilialsID AND v.SubscriptionDateStart = ve.DateStart)
+ INSERT INTO [GymsBase].[dbo].[VisitClients] ([ClientsSubID], [VisitDate], [FilialsID], [VisitEmployeeID])
+ SELECT *
+ FROM T_VisitClients
+ ORDER BY VisitDate
