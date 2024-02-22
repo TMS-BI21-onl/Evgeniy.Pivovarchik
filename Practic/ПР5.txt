@@ -1,0 +1,62 @@
+1.
+
+SELECT ProductSubcategoryID, MIN(Weight) AS MinWeight
+FROM Production.Product
+GROUP BY ProductSubcategoryID
+HAVING MIN(Weight) > 150
+
+2.
+
+SELECT TOP 1 WITH TIES ProductID, StandardCost
+FROM Production.Product
+ORDER BY StandardCost DESC	
+
+SELECT ProductID, StandardCost
+FROM Production.Product
+WHERE StandardCost =
+(
+SELECT MAX(StandardCost) AS MaxSC
+FROM Production.Product
+)
+
+SELECT *
+FROM
+(
+SELECT ProductID, StandardCost, MAX(StandardCost) OVER () AS MaxSC
+FROM Production.Product
+) T
+WHERE T.StandardCost = T.MaxSC
+
+SELECT *
+FROM
+(SELECT ProductID, StandardCost, RANK () OVER (ORDER BY StandardCost DESC) AS MaxSC
+FROM Production.Product) T
+WHERE T.MaxSC = 1
+
+
+3.
+
+SELECT FirstName, LastName
+FROM Client C LEFT JOIN (
+	SELECT ClientID
+	FROM Orders O 
+	WHERE DATEDIFF(day, OrderDate, GETDATE()) <365 ) T ON T.ClientID=C.ClientID
+WHERE t.ClientID IS NULL
+
+4.
+
+SELECT Vendor.ID, SUM(OrderID) AS OrdersCount
+FROM Order 
+GROUP VendorID
+
+5.
+
+SELECT *
+FROM
+(
+SELECT U.email, COUNT(N.is_read) AS CIS
+FROM Notification N JOIN Users U ON N.user_id = U.id
+GROUP BY N.category
+WHERE U.email = 'alex@gmail.com' AND N.is_read = 'false'
+) T
+WHERE CIS > 50
