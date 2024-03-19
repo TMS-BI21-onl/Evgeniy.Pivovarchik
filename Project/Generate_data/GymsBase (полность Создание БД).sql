@@ -481,3 +481,15 @@ LEFT JOIN (SELECT DISTINCT CAST([DateStart] AS Date) AS DateStart, FilialsID, MA
  SELECT *
  FROM T_VisitClients
  ORDER BY VisitDate
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+UPDATE [GymsBase].[dbo].[VisitClients]
+SET VisitEmployeeID = NULL
+WHERE VisitEmployeeID in (
+        SELECT DISTINCT 
+        VisitEmployeeID
+        FROM [GymsBase].[dbo].[VisitEmployees] ve
+        JOIN [GymsBase].[dbo].[Employees] e ON ve.EmployeeID = e.EmployeeID
+        WHERE e.Position != 'Trainer'
+        )
